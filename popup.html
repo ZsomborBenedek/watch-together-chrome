@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Send and receive messages</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous" />
+</head>
+
+<body style="width: 300px; padding: 5px;">
+
+  <div class="form-group">
+    <h5>Your session...</h5>
+    <div class="input-group">
+      <input type="text" id="ownId" class="form-control" placeholder="No id yet..." readonly />
+      <div class="input-group-append">
+        <button id="copyBtn" class="btn btn-sm btn-outline-dark" disabled>
+          Copy
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <h5>...or join another</h5>
+    <div class="input-group">
+      <input type="text" id="remoteId" class="form-control" placeholder="Remote peer's id..." />
+      <div class="input-group-append">
+        <button id="connectBtn" class="btn btn-sm btn-outline-success">
+          Connect
+        </button>
+        <button id="disconnectBtn" class="btn btn-sm btn-danger" hidden>
+          Disconnect
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="connectionState" style="text-align: center; padding: 5px; color: gray;"></div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>

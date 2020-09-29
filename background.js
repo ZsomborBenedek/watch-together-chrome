@@ -46,6 +46,7 @@ chrome.runtime.onInstalled.addListener(function () {
         // When data is received
         this.on('data', function (data) {
             console.log(data);
+            chrome.storage.sync.set({ videoState: data }, function () { });
         });
     }
 
@@ -92,6 +93,17 @@ chrome.runtime.onInstalled.addListener(function () {
         } else if (request.action == 'disconnectPeers') {
             disconnectPeers();
             sendResponse('Disconnecting peers...');
+        }
+    });
+
+    chrome.storage.onChanged.addListener(function (changes, namespace) {
+        for (var key in changes) {
+            if (key === 'videoState') {
+                if (conn != null) {
+                    console.log('Sending videoState!', changes[key].newValue);
+                    conn.send(changes[key].newValue);
+                }
+            }
         }
     });
 });

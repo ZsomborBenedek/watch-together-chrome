@@ -1,101 +1,78 @@
 'use strict';
 
 let peer;
-let conn;
 
 chrome.runtime.onInstalled.addListener(function () {
     console.log("Watchtogether extension started!");
 
     chrome.storage.sync.set({ connected: false }, function () { });
 
-    peer = new Peer();
-
-    // When peer is made
-    peer.on('open', function (id) {
-        chrome.storage.sync.set({ ownId: id }, function () {
-            console.log('connected to server as ' + id);
+    function newSession(initiator) {
+        console.log('starting session');
+        peer = new SimplePeer({
+            initiator: initiator ? true : false,
+            trickle: false
         });
-    });
 
-    // When peer is destroyed
-    peer.on('close', function () {
-        chrome.storage.sync.set({ ownId: null }, function () {
-            console.log('peer destroyed');
+        // When there is peer error
+        peer.on('error', function (err) {
+            console.log(err);
         });
-        console.log('reconnecting...');
-        peer = new Peer();
-    });
 
-    // When peer is disconnected
-    peer.on('disconnected', function () {
-        console.log('disconnected from server');
-        peer.reconnect();
-    });
+        // When peer is made
+        peer.on('signal', function (data) {
+            chrome.storage.sync.set({ ownId: JSON.stringify(data) }, function () {
+                console.log('signaled as ', JSON.stringify(data));
+            });
+        });
 
-    // When there is peer error
-    peer.on('error', function (err) {
-        console.log(err);
-    });
-
-    function openConnectionHandler() {
-        chrome.storage.sync.set({ remoteId: this.peer }, function () { });
-        chrome.storage.sync.set({ connected: true }, function () { });
-
-        console.log('connected to ' + this.peer);
+        // When another peer connects to this one
+        peer.on('connect', function () {
+            chrome.storage.sync.set({ connected: true }, function () {
+                console.log('connected');
+            });
+        });
 
         // When data is received
-        this.on('data', function (data) {
-            chrome.storage.sync.set({ videoState: data }, function () { });
+        peer.on('data', function (data) {
+            let videoState = JSON.parse(data);
+            console.log(videoState);
+            chrome.storage.sync.set({ videoState: videoState }, function () { });
+        });
+
+        // When peers are disconnected
+        peer.on('close', function () {
+            peer = null;
+            chrome.storage.sync.set({ ownId: null }, function () {
+                console.log('peer destroyed');
+            });
+            chrome.storage.sync.set({ remoteId: null }, function () { });
+            chrome.storage.sync.set({ connected: false }, function () { });
         });
     }
 
-    function closedConnectionHandler() {
-        // chrome.storage.sync.set({ remoteId: null }, function () { });
-        chrome.storage.sync.set({ connected: false }, function () { });
-
-        console.log('other peer disconnected');
-    }
-
-    // When another peer connects to this one
-    peer.on('connection', function (connection) {
-        conn = connection;
-
-        // When the connection is opened
-        conn.on('open', openConnectionHandler);
-
-        // When other peer closes the connection
-        conn.on('close', closedConnectionHandler);
-    });
-
-    function connectPeers(remoteId) {
-        conn = peer.connect(remoteId);
-
-        // When the connection is opened
-        conn.on('open', openConnectionHandler);
-
-        // When other peer closes the connection
-        conn.on('close', closedConnectionHandler);
-    }
-
-    // When this peer closes the connection
-    function disconnectPeers() {
-        conn.close();
-        chrome.storage.sync.set({ connected: false }, function () { });
-        console.log('disconnected');
+    function connectPeer(remoteId) {
+        peer.signal(JSON.parse(remoteId));
+        chrome.storage.sync.set({ remoteId: remoteId }, function () { });
     }
 
     // Receiving messages
     chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
-        if (request.action == 'connectPeers') {
-            connectPeers(request.remoteId);
+        if (request.action === 'newSession') {
+            newSession(true);
+            sendResponse('Making session...');
+        } else if (request.action === 'connectPeers') {
+            if (!peer)
+                newSession(false);
+            connectPeer(request.remoteId);
             sendResponse('Connecting peers...');
-        } else if (request.action == 'disconnectPeers') {
-            disconnectPeers();
+        } else if (request.action === 'disconnectPeers') {
+            if (peer)
+                peer.destroy();
             sendResponse('Disconnecting peers...');
-        } else if (request.action == 'sendState') {
-            if (conn != null) {
-                conn.send(request.content);
-            }
+        } else if (request.action === 'sendState') {
+            if (peer != null)
+                peer.send(JSON.stringify(request.content));
             sendResponse('State sent...');
         }
     });
@@ -104,5 +81,11 @@ chrome.runtime.onInstalled.addListener(function () {
 chrome.runtime.onSuspend.addListener(function () {
     console.log("Watchtogether extension suspended!");
 
-    peer.destroy();
+    if (peer !== undefined)
+        peer.destroy();
+
+    chrome.storage.sync.set({ ownId: null }, function () { });
+    chrome.storage.sync.set({ remoteId: null }, function () { });
+    chrome.storage.sync.set({ connected: false }, function () { });
+
 });

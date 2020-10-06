@@ -1,5 +1,6 @@
 'use strict';
 
+let newSessionBtn = document.getElementById('newSessionBtn');
 let ownId = document.getElementById('ownId');
 let remoteId = document.getElementById('remoteId');
 let copyButton = document.getElementById('copyBtn');
@@ -35,6 +36,8 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
         if (key === 'connected') {
             console.log('connected changed from ' + changes[key].oldValue + ' to ' + changes[key].newValue);
             setState(changes[key].newValue);
+        } else if (key === 'ownId') {
+            ownId.value = changes[key].newValue;
         }
     }
 });
@@ -51,7 +54,6 @@ function initPopup() {
     chrome.storage.sync.get('ownId', function (result) {
         if (result.ownId != null) {
             ownId.value = result.ownId;
-            copyButton.disabled = false;
         }
     });
 
@@ -60,8 +62,12 @@ function initPopup() {
             remoteId.value = result.remoteId;
     });
 
+    newSessionBtn.addEventListener('click', function () {
+        sendAction({ action: 'newSession' });
+    }, false);
+
     connectButton.addEventListener('click', function () {
-        if (remoteId.value.length > 0 && ownId.value.length > 0)
+        if (remoteId.value.length > 0)
             sendAction({ action: 'connectPeers', remoteId: remoteId.value });
     }, false);
 

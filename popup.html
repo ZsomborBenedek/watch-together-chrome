@@ -10,31 +10,36 @@
 <body style="width: 300px; padding: 5px;">
 
   <div class="form-group">
-    <h5>Your session...</h5>
+    <h5>Create session...</h5>
     <div class="input-group">
+      <div class="input-group-prepend">
+        <button id="newSessionBtn" class="btn btn-sm btn-primary">
+          Get id!
+        </button>
+      </div>
       <input type="text" id="ownId" class="form-control" placeholder="No id yet..." readonly />
       <div class="input-group-append">
-        <button id="copyBtn" class="btn btn-sm btn-outline-dark" disabled>
+        <button id="copyBtn" class="btn btn-sm btn-outline-dark">
           Copy
         </button>
       </div>
     </div>
   </div>
 
-    <h5>...or join another</h5>
-    <div class="input-group">
-      <input type="text" id="remoteId" class="form-control" placeholder="Remote peer's id..." />
-      <div class="input-group-append">
-        <button id="connectBtn" class="btn btn-sm btn-outline-success">
-          Connect
-        </button>
-        <button id="disconnectBtn" class="btn btn-sm btn-danger" hidden>
-          Disconnect
-        </button>
-      </div>
+  <h5>...connect to another</h5>
+  <div class="input-group">
+    <input type="text" id="remoteId" class="form-control" placeholder="Remote peer's id..." />
+    <div class="input-group-append">
+      <button id="connectBtn" class="btn btn-sm btn-outline-success">
+        Connect
+      </button>
+      <button id="disconnectBtn" class="btn btn-sm btn-danger" hidden>
+        Disconnect
+      </button>
     </div>
+  </div>
 
-    <div id="connectionState" style="text-align: center; color: gray;"></div>
+  <div id="connectionState" style="text-align: center; color: gray;"></div>
 
   <script src="popup.js"></script>
 </body>

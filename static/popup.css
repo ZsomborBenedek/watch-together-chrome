@@ -1,0 +1,25 @@
+body {
+    width: 300px;
+    padding: 5px;
+}
+
+.infoText {
+    text-align: center;
+    color: gray;
+}
+
+.btn-link{
+    padding: 0px !important;
+}
+
+#start,
+#initiator,
+#joiner {
+    margin: 10px;
+}
+
+#footer {
+    width: 100%;
+    padding: 0px;
+    margin: 0px;
+}

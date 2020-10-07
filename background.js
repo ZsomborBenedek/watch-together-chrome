@@ -43,15 +43,14 @@ chrome.runtime.onInstalled.addListener(function () {
         // When peers are disconnected
         peer.on('close', function () {
             peer = null;
-            chrome.storage.sync.set({ ownId: null }, function () {
-                console.log('peer destroyed');
-            });
+            chrome.storage.sync.set({ ownId: null }, function () { });
             chrome.storage.sync.set({ remoteId: null }, function () { });
+            chrome.storage.sync.set({ state: 'start' }, function () { });
             chrome.storage.sync.set({ connected: false }, function () { });
         });
     }
 
-    function connectPeer(remoteId) {
+    function joinSession(remoteId) {
         peer.signal(JSON.parse(remoteId));
         chrome.storage.sync.set({ remoteId: remoteId }, function () { });
     }
@@ -61,10 +60,10 @@ chrome.runtime.onInstalled.addListener(function () {
         if (request.action === 'newSession') {
             newSession(true);
             sendResponse('Making session...');
-        } else if (request.action === 'connectPeers') {
+        } else if (request.action === 'joinSession') {
             if (!peer)
                 newSession(false);
-            connectPeer(request.remoteId);
+            joinSession(request.remoteId);
             sendResponse('Connecting peers...');
         } else if (request.action === 'disconnectPeers') {
             if (peer)
@@ -86,6 +85,6 @@ chrome.runtime.onSuspend.addListener(function () {
 
     chrome.storage.sync.set({ ownId: null }, function () { });
     chrome.storage.sync.set({ remoteId: null }, function () { });
+    chrome.storage.sync.set({ state: 'start' }, function () { });
     chrome.storage.sync.set({ connected: false }, function () { });
-
 });

@@ -21,7 +21,8 @@ chrome.runtime.onInstalled.addListener(function () {
 
         // When peer is made
         peer.on('signal', function (data) {
-            chrome.storage.sync.set({ ownId: JSON.stringify(data) }, function () {
+            let id = btoa(JSON.stringify(data));
+            chrome.storage.sync.set({ ownId: id }, function () {
                 console.log('signaled as ', JSON.stringify(data));
             });
         });
@@ -35,7 +36,7 @@ chrome.runtime.onInstalled.addListener(function () {
 
         // When data is received
         peer.on('data', function (data) {
-            let videoState = JSON.parse(data);
+            let videoState = JSON.parse(atob(data));
             console.log(videoState);
             chrome.storage.sync.set({ videoState: videoState }, function () { });
         });
@@ -51,7 +52,7 @@ chrome.runtime.onInstalled.addListener(function () {
     }
 
     function joinSession(remoteId) {
-        peer.signal(JSON.parse(remoteId));
+        peer.signal(JSON.parse(atob(remoteId)));
         chrome.storage.sync.set({ remoteId: remoteId }, function () { });
     }
 
@@ -71,7 +72,7 @@ chrome.runtime.onInstalled.addListener(function () {
             sendResponse('Disconnecting peers...');
         } else if (request.action === 'sendState') {
             if (peer != null)
-                peer.send(JSON.stringify(request.content));
+                peer.send(btoa(JSON.stringify(request.content)));
             sendResponse('State sent...');
         }
     });

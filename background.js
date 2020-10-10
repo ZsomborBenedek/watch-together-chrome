@@ -7,8 +7,18 @@ chrome.runtime.onInstalled.addListener(function () {
 
     chrome.storage.sync.set({ connected: false }, function () { });
 
+    function injectContentScript(tabId, changeInfo, tab) {
+        if (tab.url && !tab.url.startsWith('chrome')) {
+            if (changeInfo.status === 'complete') {
+                chrome.tabs.executeScript({
+                    file: 'content.js'
+                });
+                console.trace('injected content script to', tab.url);
+            }
+        }
+    }
+
     function newSession(initiator) {
-        console.log('starting session');
         peer = new SimplePeer({
             initiator: initiator ? true : false,
             trickle: false
@@ -23,7 +33,7 @@ chrome.runtime.onInstalled.addListener(function () {
         peer.on('signal', function (data) {
             let id = btoa(JSON.stringify(data));
             chrome.storage.sync.set({ ownId: id }, function () {
-                console.log('signaled as ', JSON.stringify(data));
+                console.log('signaled as ', id);
             });
         });
 
@@ -32,6 +42,7 @@ chrome.runtime.onInstalled.addListener(function () {
             chrome.storage.sync.set({ connected: true }, function () {
                 console.log('connected');
             });
+            chrome.tabs.onUpdated.addListener(injectContentScript);
         });
 
         // When data is received
@@ -48,6 +59,7 @@ chrome.runtime.onInstalled.addListener(function () {
             chrome.storage.sync.set({ remoteId: null }, function () { });
             chrome.storage.sync.set({ state: 'start' }, function () { });
             chrome.storage.sync.set({ connected: false }, function () { });
+            chrome.tabs.onUpdated.removeListener(injectContentScript);
         });
     }
 

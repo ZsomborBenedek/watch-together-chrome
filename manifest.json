@@ -4,23 +4,13 @@
     "manifest_version": 2,
     "description": "Synchronized video controlling using WebRTC.",
     "permissions": [
-        "storage"
+        "storage",
+        "activeTab",
+        "<all_urls>"
     ],
     "background": {
         "page": "background.html"
     },
-    "content_scripts": [
-        {
-            "matches": [
-                "http://*/*",
-                "https://*/*"
-            ],
-            "run_at": "document_end",
-            "js": [
-                "content.js"
-            ]
-        }
-    ],
     "browser_action": {
         "default_popup": "popup.html",
         "default_icon": {

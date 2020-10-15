@@ -123,20 +123,16 @@ function joinSession(remoteId) {
 chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
     if (request.action === 'newSession') {
         newSession(true);
-        sendResponse('Making session...');
     } else if (request.action === 'joinSession') {
         if (!peer)
             newSession(false);
         joinSession(request.remoteId);
-        sendResponse('Connecting peers...');
     } else if (request.action === 'disconnectPeers') {
         if (peer)
             peer.destroy();
-        sendResponse('Disconnecting peers...');
     } else if (request.action === 'sendState') {
         if (peer && sync)
             peer.send(btoa(JSON.stringify(request.content)));
-        sendResponse('State sent...');
     }
 });
 

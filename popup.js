@@ -54,13 +54,6 @@ function connected(connected) {
     }
 }
 
-// Sending messages
-function sendAction(message) {
-    chrome.runtime.sendMessage(message, function (response) {
-        console.log(response);
-    });
-}
-
 chrome.storage.onChanged.addListener(function (changes, namespace) {
     for (var key in changes) {
         if (key === 'connected')
@@ -106,7 +99,7 @@ function initPopup() {
     newSessionBtn.addEventListener('click', function () {
         setState('initiate');
         chrome.storage.sync.set({ state: 'initiate' }, function () { });
-        sendAction({ action: 'newSession' });
+        chrome.runtime.sendMessage({ action: 'newSession' });
     }, false);
 
     joinSessionBtn.addEventListener('click', function () {
@@ -122,11 +115,11 @@ function initPopup() {
 
     connectButton.addEventListener('click', function () {
         if (remoteId.value.length > 0)
-            sendAction({ action: 'joinSession', remoteId: remoteId.value });
+            chrome.runtime.sendMessage({ action: 'joinSession', remoteId: remoteId.value });
     }, false);
 
     disconnectButton.addEventListener('click', function () {
-        sendAction({ action: 'disconnectPeers' });
+        chrome.runtime.sendMessage({ action: 'disconnectPeers' });
     }, false);
 
     footer.children[0].addEventListener('click', function () {
@@ -135,7 +128,7 @@ function initPopup() {
         chrome.storage.sync.set({ ownId: null }, function () { });
         chrome.storage.sync.set({ remoteId: null }, function () { });
         chrome.storage.sync.set({ sync: false }, function () { });
-        sendAction({ action: 'disconnectPeers' });
+        chrome.runtime.sendMessage({ action: 'disconnectPeers' });
     }, false);
 
     vidSync.addEventListener('click', function () {

@@ -2,6 +2,7 @@
 
 let peer;
 let active;
+let sync;
 
 chrome.runtime.onInstalled.addListener(function () {
     console.log("Watchtogether extension installed!");
@@ -22,34 +23,39 @@ function keepAlive() {
     }
 }
 
-function syncVids(sync) {
-    if (sync) {
-        chrome.tabs.executeScript({
-            file: 'content.js'
-        }, _ => {
-            let e = chrome.runtime.lastError;
-            if (e !== undefined) {
-                console.log(_, e);
-            }
-        });
+function syncVids(_sync) {
+    if (_sync) {
+        sync = true;
+        injectContentScript();
         console.log('vids syncing');
-        chrome.tabs.onUpdated.addListener(injectContentScript);
+        chrome.tabs.onActivated.addListener(injectContentScriptToActivated);
+        chrome.tabs.onUpdated.addListener(injectContentScriptToUpdated);
     } else {
+        sync = false;
         console.log('vids not syncing');
-        chrome.tabs.onUpdated.removeListener(injectContentScript);
+        chrome.tabs.onActivated.removeListener(injectContentScriptToActivated);
+        chrome.tabs.onUpdated.removeListener(injectContentScriptToUpdated);
     }
 }
 
-function injectContentScript(tabId, changeInfo, tab) {
+function injectContentScript() {
+    chrome.tabs.executeScript({
+        file: 'content.js'
+    }, _ => {
+        let e = chrome.runtime.lastError;
+        if (e !== undefined) {
+            console.log(_, e);
+        }
+    });
+}
+
+function injectContentScriptToActivated(activeInfo) {
+    injectContentScript();
+}
+
+function injectContentScriptToUpdated(tabId, changeInfo, tab) {
     if (changeInfo.status === 'complete') {
-        chrome.tabs.executeScript(tabId, {
-            file: 'content.js'
-        }, _ => {
-            let e = chrome.runtime.lastError;
-            if (e !== undefined) {
-                console.log(tabId, _, e);
-            }
-        });
+        injectContentScript();
     }
 }
 
@@ -80,13 +86,16 @@ function newSession(initiator) {
             console.log('connected');
         });
         chrome.storage.sync.set({ sync: true }, function () { });
+        sync = true;
     });
 
     // When data is received
     peer.on('data', function (data) {
-        let videoState = JSON.parse(atob(data));
-        console.log(videoState);
-        chrome.storage.sync.set({ videoState: videoState }, function () { });
+        if (sync) {
+            let videoState = JSON.parse(atob(data));
+            console.log(videoState);
+            chrome.storage.sync.set({ videoState: videoState }, function () { });
+        }
     });
 
     // When peers are disconnected
@@ -125,7 +134,7 @@ chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
             peer.destroy();
         sendResponse('Disconnecting peers...');
     } else if (request.action === 'sendState') {
-        if (peer != null)
+        if (peer && sync)
             peer.send(btoa(JSON.stringify(request.content)));
         sendResponse('State sent...');
     }

@@ -96,8 +96,12 @@ function newSession(initiator) {
 }
 
 function joinSession(remoteId) {
-    peer.signal(JSON.parse(atob(remoteId)));
-    chrome.storage.sync.set({ remoteId: remoteId }, function () { });
+    try {
+        peer.signal(JSON.parse(atob(remoteId)));
+        chrome.storage.sync.set({ remoteId: remoteId }, function () { });
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 // Receiving messages

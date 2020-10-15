@@ -135,6 +135,7 @@ function initPopup() {
         chrome.storage.sync.set({ ownId: null }, function () { });
         chrome.storage.sync.set({ remoteId: null }, function () { });
         chrome.storage.sync.set({ sync: false }, function () { });
+        sendAction({ action: 'disconnectPeers' });
     }, false);
 
     vidSync.addEventListener('click', function () {

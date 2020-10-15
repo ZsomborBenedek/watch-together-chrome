@@ -1,11 +1,21 @@
 'use strict';
 
 let peer;
+let active;
 
 chrome.runtime.onInstalled.addListener(function () {
     console.log("Watchtogether extension started!");
 
     chrome.storage.sync.set({ connected: false }, function () { });
+
+    function keepAlive() {
+        if (active) {
+            setTimeout(() => {
+                chrome.runtime.getBackgroundPage(_ => { });
+                keepAlive();
+            }, 2000);
+        }
+    }
 
     function syncVids(sync) {
         if (sync) {
@@ -51,6 +61,8 @@ chrome.runtime.onInstalled.addListener(function () {
 
         // When peer is made
         peer.on('signal', function (data) {
+            active = true;
+            keepAlive();
             let id = btoa(JSON.stringify(data));
             chrome.storage.sync.set({ ownId: id }, function () {
                 console.log('signaled as ', id);
@@ -75,6 +87,7 @@ chrome.runtime.onInstalled.addListener(function () {
         // When peers are disconnected
         peer.on('close', function () {
             peer = null;
+            active = false;
             chrome.storage.sync.set({ ownId: null }, function () { });
             chrome.storage.sync.set({ remoteId: null }, function () { });
             chrome.storage.sync.set({ state: 'start' }, function () { });

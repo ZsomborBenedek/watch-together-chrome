@@ -5,6 +5,12 @@ let active;
 
 chrome.runtime.onInstalled.addListener(function () {
     console.log("Watchtogether extension installed!");
+
+    chrome.storage.sync.set({ ownId: null }, function () { });
+    chrome.storage.sync.set({ remoteId: null }, function () { });
+    chrome.storage.sync.set({ state: 'start' }, function () { });
+    chrome.storage.sync.set({ connected: false }, function () { });
+    chrome.storage.sync.set({ sync: false }, function () { });
 });
 
 function keepAlive() {
@@ -142,4 +148,5 @@ chrome.runtime.onSuspend.addListener(function () {
     chrome.storage.sync.set({ remoteId: null }, function () { });
     chrome.storage.sync.set({ state: 'start' }, function () { });
     chrome.storage.sync.set({ connected: false }, function () { });
+    chrome.storage.sync.set({ sync: false }, function () { });
 });

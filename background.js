@@ -7,14 +7,34 @@ chrome.runtime.onInstalled.addListener(function () {
 
     chrome.storage.sync.set({ connected: false }, function () { });
 
+    function syncVids(sync) {
+        if (sync) {
+            chrome.tabs.executeScript({
+                file: 'content.js'
+            }, _ => {
+                let e = chrome.runtime.lastError;
+                if (e !== undefined) {
+                    console.log(_, e);
+                }
+            });
+            console.log('vids syncing');
+            chrome.tabs.onUpdated.addListener(injectContentScript);
+        } else {
+            console.log('vids not syncing');
+            chrome.tabs.onUpdated.removeListener(injectContentScript);
+        }
+    }
+
     function injectContentScript(tabId, changeInfo, tab) {
-        if (tab.url && !tab.url.startsWith('chrome')) {
-            if (changeInfo.status === 'complete') {
-                chrome.tabs.executeScript({
-                    file: 'content.js'
-                });
-                console.trace('injected content script to', tab.url);
-            }
+        if (changeInfo.status === 'complete') {
+            chrome.tabs.executeScript(tabId, {
+                file: 'content.js'
+            }, _ => {
+                let e = chrome.runtime.lastError;
+                if (e !== undefined) {
+                    console.log(tabId, _, e);
+                }
+            });
         }
     }
 
@@ -42,7 +62,7 @@ chrome.runtime.onInstalled.addListener(function () {
             chrome.storage.sync.set({ connected: true }, function () {
                 console.log('connected');
             });
-            chrome.tabs.onUpdated.addListener(injectContentScript);
+            chrome.storage.sync.set({ sync: true }, function () { });
         });
 
         // When data is received
@@ -59,7 +79,7 @@ chrome.runtime.onInstalled.addListener(function () {
             chrome.storage.sync.set({ remoteId: null }, function () { });
             chrome.storage.sync.set({ state: 'start' }, function () { });
             chrome.storage.sync.set({ connected: false }, function () { });
-            chrome.tabs.onUpdated.removeListener(injectContentScript);
+            chrome.storage.sync.set({ sync: false }, function () { });
         });
     }
 
@@ -86,6 +106,13 @@ chrome.runtime.onInstalled.addListener(function () {
             if (peer != null)
                 peer.send(btoa(JSON.stringify(request.content)));
             sendResponse('State sent...');
+        }
+    });
+
+    chrome.storage.onChanged.addListener(function (changes, namespace) {
+        for (var key in changes) {
+            if (key === 'sync')
+                syncVids(changes[key].newValue);
         }
     });
 });

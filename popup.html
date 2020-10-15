@@ -41,7 +41,11 @@
 
   <div id="footer" class="text-center">
     <button id="backBtn" class="btn btn-link infoText">Not connected (go back)</button>
-    <span class="infoText">Connected</span>
+    <div class="custom-control custom-switch switch-danger">
+      <input type="checkbox" id="vidSync" class="custom-control-input">
+      <label class="infoText custom-control-label" for="vidSync">Video syncing</label>
+    </div>
+    <!-- <span class="infoText">Connected</span> -->
   </div>
 
   <script src="popup.js"></script>

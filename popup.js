@@ -11,6 +11,7 @@ let remoteId = document.getElementById('remoteId');
 let copyButton = document.getElementById('copyBtn');
 let connectButton = document.getElementById('connectBtn');
 let disconnectButton = document.getElementById('disconnectBtn');
+let vidSync = document.getElementById('vidSync');
 
 function setState(state) {
     if (state === 'start') {
@@ -42,12 +43,14 @@ function connected(connected) {
         disconnectButton.hidden = false;
         footer.children[0].hidden = true;
         footer.children[1].hidden = false;
+        vidSync.checked = true;
     } else {
         remoteId.disabled = false;
         connectButton.hidden = false;
         disconnectButton.hidden = true;
         footer.children[0].hidden = false;
         footer.children[1].hidden = true;
+        vidSync.checked = false;
     }
 }
 
@@ -60,18 +63,16 @@ function sendAction(message) {
 
 chrome.storage.onChanged.addListener(function (changes, namespace) {
     for (var key in changes) {
-        if (key === 'connected') {
+        if (key === 'connected')
             connected(changes[key].newValue);
-        } else if (key === 'state') {
-            if (changes[key].newValue === 'start') {
-                setState('start');
-                ownId.value = null;
-                remoteId.value = null;
-            }
-        } else if (key === 'ownId')
+        else if (key === 'state')
+            setState(changes[key].newValue);
+        else if (key === 'ownId')
             ownId.value = changes[key].newValue;
         else if (key === 'remoteId')
             remoteId.value = changes[key].newValue;
+        else if (key === 'sync')
+            vidSync.value = changes[key].newValue;
     }
 });
 
@@ -91,13 +92,15 @@ function initPopup() {
     chrome.storage.sync.get('ownId', function (result) {
         if (result.ownId != null)
             ownId.value = result.ownId;
-        else
-            setState('start');
     });
 
     chrome.storage.sync.get('remoteId', function (result) {
         if (result.remoteId != null)
             remoteId.value = result.remoteId;
+    });
+
+    chrome.storage.sync.get('sync', function (result) {
+        vidSync.checked = result.sync;
     });
 
     newSessionBtn.addEventListener('click', function () {
@@ -128,8 +131,13 @@ function initPopup() {
 
     footer.children[0].addEventListener('click', function () {
         setState('start');
+        chrome.storage.sync.set({ state: 'start' }, function () { });
         chrome.storage.sync.set({ ownId: null }, function () { });
         chrome.storage.sync.set({ remoteId: null }, function () { });
-        chrome.storage.sync.set({ state: 'start' }, function () { });
+        chrome.storage.sync.set({ sync: false }, function () { });
     }, false);
+
+    vidSync.addEventListener('click', function () {
+        chrome.storage.sync.set({ sync: vidSync.checked }, function () { });
+    });
 }

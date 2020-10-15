@@ -1,26 +1,38 @@
 'use strict';
 
-function initContent() {
-    let videos = document.getElementsByTagName('video');
-    if (videos.length > 0) {
-        const video = videos[0];
-        const sendState = function send() {
-            if (video.readyState > 2) {
-                var videoState = {
-                    url: window.location.href,
-                    isPaused: video.paused,
-                    currentTime: video.currentTime
-                };
-                chrome.runtime.sendMessage({ action: 'sendState', content: videoState }, function (response) { });
-            }
-        };
+// Init
+window.addEventListener('load', function () {
+    let video = getVideo();
 
+    if (video) {
+        initSync();
+    }
+
+    function getVideo() {
+        let videos = document.getElementsByTagName('video');
+        if (videos.length > 0) {
+            return videos[0];
+        }
+    }
+
+    function sendState() {
+        if (video.readyState > 2) {
+            var videoState = {
+                url: window.location.href,
+                isPaused: video.paused,
+                currentTime: video.currentTime
+            };
+            chrome.runtime.sendMessage({ action: 'sendState', content: videoState }, function (response) { });
+        }
+    }
+
+    function initSync() {
         // Max allowed time offset between videos (in seconds)
         const toffset = 0.2;
 
-        sendState(video);
-
         // Sending messages if user clicks
+        sendState();
+
         video.addEventListener('pause', sendState);
         video.addEventListener('play', sendState);
         video.addEventListener('seeked', sendState);
@@ -43,7 +55,19 @@ function initContent() {
             }
         });
     }
-}
 
-// Init
-window.addEventListener('load', initContent, false);
+    chrome.runtime.onConnect.addListener(function (port) {
+        video.addEventListener('pause', sendState);
+        video.addEventListener('play', sendState);
+        video.addEventListener('seeked', sendState);
+        console.log('connected');
+
+        port.onDisconnect.addListener(function () {
+            video.removeEventListener('pause', sendState);
+            video.removeEventListener('play', sendState);
+            video.removeEventListener('seeked', sendState);
+            console.log('disconnected');
+        });
+    });
+
+}, false);

@@ -3,7 +3,6 @@
 
 <head>
   <title>WatchTogether</title>
-  <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"> -->
   <link rel="stylesheet" href="static/bootstrap.min.css">
   <link rel="stylesheet" href="static/mdb.lite.min.css">
   <link rel="stylesheet" href="static/popup.css">
@@ -41,11 +40,10 @@
 
   <div id="footer" class="text-center">
     <button id="backBtn" class="btn btn-link infoText">Not connected (go back)</button>
-    <div class="custom-control custom-switch switch-danger">
-      <input type="checkbox" id="vidSync" class="custom-control-input">
-      <label class="infoText custom-control-label" for="vidSync">Video syncing</label>
+    <div class="custom-control custom-switch">
+      <input type="checkbox" id="vidSync" class="custom-control-input custom-control-input-red">
+      <label class="infoText custom-control-label" for="vidSync">Video syncing <b>on</b></label>
     </div>
-    <!-- <span class="infoText">Connected</span> -->
   </div>
 
   <script src="popup.js"></script>

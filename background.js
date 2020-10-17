@@ -102,11 +102,7 @@ function newSession(initiator) {
     peer.on('close', function () {
         peer = null;
         active = false;
-        chrome.storage.sync.set({ ownId: null }, function () { });
-        chrome.storage.sync.set({ remoteId: null }, function () { });
-        chrome.storage.sync.set({ state: 'start' }, function () { });
-        chrome.storage.sync.set({ connected: false }, function () { });
-        chrome.storage.sync.set({ sync: false }, function () { });
+        disconnectPeers();
     });
 }
 
@@ -119,6 +115,18 @@ function joinSession(remoteId) {
     }
 }
 
+function disconnectPeers() {
+    if (peer) {
+        peer.destroy();
+    } else {
+        chrome.storage.sync.set({ ownId: null }, function () { });
+        chrome.storage.sync.set({ remoteId: null }, function () { });
+        chrome.storage.sync.set({ state: 'start' }, function () { });
+        chrome.storage.sync.set({ connected: false }, function () { });
+        chrome.storage.sync.set({ sync: false }, function () { });
+    }
+}
+
 // Receiving messages
 chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
     if (request.action === 'newSession') {
@@ -128,8 +136,7 @@ chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
             newSession(false);
         joinSession(request.remoteId);
     } else if (request.action === 'disconnectPeers') {
-        if (peer)
-            peer.destroy();
+        disconnectPeers();
     } else if (request.action === 'sendState') {
         if (peer && sync)
             peer.send(btoa(JSON.stringify(request.content)));
@@ -146,12 +153,5 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
 chrome.runtime.onSuspend.addListener(function () {
     console.log("Watchtogether extension suspended!");
 
-    if (peer)
-        peer.destroy();
-
-    chrome.storage.sync.set({ ownId: null }, function () { });
-    chrome.storage.sync.set({ remoteId: null }, function () { });
-    chrome.storage.sync.set({ state: 'start' }, function () { });
-    chrome.storage.sync.set({ connected: false }, function () { });
-    chrome.storage.sync.set({ sync: false }, function () { });
+    disconnectPeers();
 });

@@ -124,12 +124,10 @@ function initPopup() {
     }, false);
 
     disconnectButton.addEventListener('click', function () {
-        setState('start');
         chrome.runtime.sendMessage({ action: 'disconnectPeers' });
     }, false);
 
     footer.children[0].addEventListener('click', function () {
-        setState('start');
         chrome.runtime.sendMessage({ action: 'disconnectPeers' });
     }, false);
 

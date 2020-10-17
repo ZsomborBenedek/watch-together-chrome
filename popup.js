@@ -124,15 +124,12 @@ function initPopup() {
     }, false);
 
     disconnectButton.addEventListener('click', function () {
+        setState('start');
         chrome.runtime.sendMessage({ action: 'disconnectPeers' });
     }, false);
 
     footer.children[0].addEventListener('click', function () {
         setState('start');
-        chrome.storage.sync.set({ state: 'start' }, function () { });
-        chrome.storage.sync.set({ ownId: null }, function () { });
-        chrome.storage.sync.set({ remoteId: null }, function () { });
-        chrome.storage.sync.set({ sync: false }, function () { });
         chrome.runtime.sendMessage({ action: 'disconnectPeers' });
     }, false);
 

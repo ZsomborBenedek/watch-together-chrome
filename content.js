@@ -24,13 +24,17 @@ if (window.contentScriptInjected !== true) {
                 isPaused: video.paused,
                 currentTime: video.currentTime
             };
-            chrome.runtime.sendMessage({ action: 'sendState', content: videoState });
+            try {
+                chrome.runtime.sendMessage({ action: 'sendState', content: videoState });
+            } catch (error) {
+                console.log(error);
+            }
         }
     }
 
     function initSync() {
         // Max allowed time offset between videos (in seconds)
-        const toffset = 0.2;
+        const toffset = 0.5;
 
         // Sending messages if user clicks
         sendState();
@@ -55,20 +59,6 @@ if (window.contentScriptInjected !== true) {
                     }
                 }
             }
-        });
-
-        chrome.runtime.onConnect.addListener(function (port) {
-            video.addEventListener('pause', sendState);
-            video.addEventListener('play', sendState);
-            video.addEventListener('seeked', sendState);
-            console.log('connected');
-
-            port.onDisconnect.addListener(function () {
-                video.removeEventListener('pause', sendState);
-                video.removeEventListener('play', sendState);
-                video.removeEventListener('seeked', sendState);
-                console.log('disconnected');
-            });
         });
     }
 }
